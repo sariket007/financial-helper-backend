@@ -88,6 +88,52 @@ app.get("/api/test-ai", async (req, res) => {
   }
 });
 
+// 4. The Agentic Advice Route
+app.post("/api/advice/:userId", async (req, res) => {
+  try {
+    const { question } = req.body;
+    const userId = req.params.userId;
+
+    // Step A: Fetch the Memory (Database)
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, error: "User not found in database." });
+    }
+
+    // Step B: Build the Context-Aware Prompt
+    // This is where the magic happens. We inject the database values directly into the AI's brain.
+    const systemPrompt = `
+            You are an elite financial advisor AI. 
+            Your client's name is ${user.name}.
+            Their annual income is ₹${user.financialProfile.annualIncome}.
+            Their risk tolerance is ${user.financialProfile.riskTolerance}.
+            Their primary financial goal is: ${user.financialProfile.primaryGoal}.
+            
+            The client is asking you this question: "${question}"
+            
+            Based strictly on their financial profile, provide a professional, highly personalized, two-paragraph recommendation. Do not give generic advice.
+        `;
+
+    // Step C: Call the Brain (LLM)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const result = await model.generateContent(systemPrompt);
+    const aiResponse = result.response.text();
+
+    // Step D: Return the completed solution
+    res.status(200).json({
+      success: true,
+      client: user.name,
+      questionAsked: question,
+      advisorResponse: aiResponse,
+    });
+  } catch (error) {
+    console.error("Agent Logic Error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
