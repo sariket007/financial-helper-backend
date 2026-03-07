@@ -1,7 +1,12 @@
 require("dotenv").config();
+
 const express = require("express");
+
 const connectDB = require("./config/db");
-const User = require("./models/User"); // 1. Import the User model
+
+const User = require("./models/User"); // Database layer
+
+const { GoogleGenerativeAI } = require("@google/generative-ai"); // 1. Import the AI SDK
 
 // Connect to Database
 connectDB();
@@ -11,9 +16,9 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ message: "Financial Helper server is Running!" });
-});
+// app.get("/api/health", (req, res) => {
+//   res.status(200).json({ message: "Financial Helper server is Running!" });
+// });
 
 // 2. The Test Route "Test case perform to make etry for user"
 // app.get("/api/test-user", async (req, res) => {
@@ -48,6 +53,40 @@ app.get("/api/health", (req, res) => {
 //     res.status(500).json({ success: false, error: error.message });
 //   }
 // });
+
+// 2. Initialize the AI using your hidden environment variable
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// Very initial steps to test the backend running.
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ message: "Financial Helper server is Running!" });
+});
+
+// 3. The AI Test Route
+app.get("/api/test-ai", async (req, res) => {
+  try {
+    // We use the 'flash' model because it is highly optimized for fast, text-based tasks
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    // Define a strict, persona-driven prompt for our FinTech use case
+    const prompt =
+      "You are an expert financial advisor AI. Write a professional, highly engaging two-sentence welcome message for a new user logging into a wealth management platform.";
+
+    // Execute the call to the AI
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+
+    // Send the AI's response back to the browser
+    res.status(200).json({
+      success: true,
+      promptUsed: prompt,
+      aiResponse: responseText,
+    });
+  } catch (error) {
+    console.error("AI Integration Error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
