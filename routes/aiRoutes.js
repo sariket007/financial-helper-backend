@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const aiController = require("../controllers/aiController");
+const { protect } = require("../middleware/authMiddleware"); // 1. Import the middleware
 
-// The route remains clean, but it's now pointing to a class method
-router.post("/advice/:userId", aiController.getFinancialAdvice);
+// 2. Add 'protect' as the second argument. The request must pass this before hitting the controller.
+router.post("/advice/:userId", protect, aiController.getFinancialAdvice);
 
 module.exports = router;

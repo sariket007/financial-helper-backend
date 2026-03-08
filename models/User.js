@@ -51,10 +51,10 @@ const userSchema = new mongoose.Schema(
 
 // 3. Mongoose Pre-Save Hook for Password Hashing
 // This runs automatically right before await user.save() is called
-userSchema.pre("save", async function (next) {
-  // If the password wasn't modified (like if we are just adding a chat message), skip hashing
+userSchema.pre("save", async function () {
+  // If the password wasn't modified (like if we are just adding a chat message), exit the hook immediately
   if (!this.isModified("password")) {
-    next();
+    return;
   }
 
   // Generate a salt and hash the password
