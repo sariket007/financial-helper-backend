@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors'); // 1. Import CORS
+const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const aiRoutes = require('./routes/aiRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -10,9 +11,13 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// 2. Enable CORS so React can talk to us
-app.use(cors()); 
+// 2. Update CORS to explicitly allow credentials (cookies) from your React frontend
+app.use(cors({
+    origin: 'http://localhost:5173', // Must be exact URL, no trailing slash
+    credentials: true
+}));
 app.use(express.json());
+
 
 // 2. Mount the routes
 app.use("/api/auth", authRoutes); // Handles /api/auth/register and /api/auth/login
