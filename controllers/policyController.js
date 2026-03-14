@@ -1,0 +1,93 @@
+const PolicyPackageService = require("../services/PolicyPackageService");
+
+class PolicyController {
+  // 1. CREATE (Admin Only)
+  async createPolicy(req, res) {
+    try {
+      const newPolicy = await PolicyPackageService.createPolicy(req.body);
+      res.status(201).json({ success: true, data: newPolicy });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
+  // 2. READ ALL (Admin Dashboard)
+  async getAllPolicies(req, res) {
+    try {
+      const policies = await PolicyPackageService.getAllPolicies();
+      res.status(200).json({ success: true, data: policies });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "Server Error" });
+    }
+  }
+
+  // 3. READ ACTIVE ONLY (Public Storefront)
+  async getPublicPolicies(req, res) {
+    try {
+      // Notice how clean this is? The Service handles all the database filtering.
+      const publicPolicies = await PolicyPackageService.getPublicPolicies();
+      res.status(200).json({
+        success: true,
+        count: publicPolicies.length,
+        data: publicPolicies,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "Server Error" });
+    }
+  }
+
+  // 4. READ SINGLE
+  async getPolicyById(req, res) {
+    try {
+      const policy = await PolicyPackageService.getPolicyById(req.params.id);
+      if (!policy) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Policy not found" });
+      }
+      res.status(200).json({ success: true, data: policy });
+    } catch (error) {
+      // If they pass an invalid MongoDB ID format, Mongoose throws a CastError
+      res.status(400).json({ success: false, error: "Invalid ID format" });
+    }
+  }
+
+  // 5. UPDATE
+  async updatePolicy(req, res) {
+    try {
+      const updatedPolicy = await PolicyPackageService.updatePolicy(
+        req.params.id,
+        req.body,
+      );
+      if (!updatedPolicy) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Policy not found" });
+      }
+      res.status(200).json({ success: true, data: updatedPolicy });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
+  // 6. TOGGLE STATUS (Soft Delete)
+  async togglePolicyStatus(req, res) {
+    try {
+      const toggledPolicy = await PolicyPackageService.togglePolicyStatus(
+        req.params.id,
+      );
+      res.status(200).json({
+        success: true,
+        message: `Policy is now ${toggledPolicy.isActive ? "Active" : "Inactive"}`,
+        data: toggledPolicy,
+      });
+    } catch (error) {
+      if (error.message === "Policy not found") {
+        return res.status(404).json({ success: false, error: error.message });
+      }
+      res.status(500).json({ success: false, error: "Server Error" });
+    }
+  }
+}
+
+module.exports = new PolicyController();
