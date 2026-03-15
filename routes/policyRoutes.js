@@ -1,32 +1,47 @@
 const express = require("express");
 const router = express.Router();
 const policyController = require("../controllers/policyController");
-const { protect } = require("../middleware/authMiddleware");
 
-// ==========================================
-// 1. PUBLIC ROUTES (React Storefront)
-// ==========================================
+// 1. Import BOTH middlewares
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
-// GET /api/policies/public -> Returns ONLY active policies
+// === PUBLIC ROUTES ===
 router.get("/public", policyController.getPublicPolicies);
-
-// GET /api/policies/12345abcde -> Returns a single policy's details
 router.get("/:id", policyController.getPolicyById);
 
-// ==========================================
-// 2. PROTECTED ROUTES (Admin Dashboard)
-// ==========================================
+// === PROTECTED ADMIN ROUTES ===
+// Notice the chain: First 'protect' (Are you logged in?), THEN 'authorizeRoles' (Are you staff?)
 
-// GET /api/policies -> Returns ALL policies (active and inactive)
-router.get("/", protect, policyController.getAllPolicies);
+// GET all policies (Admin Dashboard needs this)
+router.get(
+  "/",
+  protect,
+  authorizeRoles("admin", "superadmin"),
+  policyController.getAllPolicies,
+);
 
-// POST /api/policies -> Creates a new policy package
-router.post("/", protect, policyController.createPolicy);
+// CREATE a policy
+router.post(
+  "/",
+  protect,
+  authorizeRoles("admin", "superadmin"),
+  policyController.createPolicy,
+);
 
-// PUT /api/policies/12345abcde -> Updates the whole policy (price, name, etc.)
-router.put("/:id", protect, policyController.updatePolicy);
+// UPDATE a policy
+router.put(
+  "/:id",
+  protect,
+  authorizeRoles("admin", "superadmin"),
+  policyController.updatePolicy,
+);
 
-// PATCH /api/policies/12345abcde/toggle -> Soft deletes/restores a policy
-router.patch("/:id/toggle", protect, policyController.togglePolicyStatus);
+// TOGGLE a policy
+router.patch(
+  "/:id/toggle",
+  protect,
+  authorizeRoles("admin", "superadmin"),
+  policyController.togglePolicyStatus,
+);
 
 module.exports = router;

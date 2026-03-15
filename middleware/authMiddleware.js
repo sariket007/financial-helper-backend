@@ -30,4 +30,20 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+// === NEW: Role Authorization Middleware ===
+// We use the rest operator (...roles) so we can pass in multiple allowed roles like ('admin', 'superadmin')
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    // req.user was injected by the 'protect' middleware right before this runs
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: `Access Denied: Role '${req.user ? req.user.role : "Unknown"}' is not authorized to access this route.`,
+      });
+    }
+    // If they have the right role, let them pass to the Controller
+    next();
+  };
+};
+
+module.exports = { protect, authorizeRoles };
