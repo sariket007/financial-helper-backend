@@ -25,11 +25,34 @@ class PolicyPackageService {
   }
 
   // 5. UPDATE
-  async updatePolicy(id, updateData) {
-    return await PolicyPackage.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+  // async updatePolicy(id, updateData) {
+  //   return await PolicyPackage.findByIdAndUpdate(id, updateData, {
+  //     new: true,
+  //     runValidators: true,
+  //   });
+  // }
+
+  async updatePolicyById(policyId, updateData) {
+    try {
+      // The Service handles the raw database operation
+      const updatedPolicy = await PolicyPackage.findByIdAndUpdate(
+        policyId,
+        updateData,
+        { new: true, runValidators: true },
+      );
+
+      if (!updatedPolicy) {
+        throw new Error("Policy not found");
+      }
+
+      return updatedPolicy;
+    } catch (error) {
+      // Handle MongoDB duplicate key error specifically
+      if (error.code === 11000) {
+        throw new Error("A policy with this name already exists");
+      }
+      throw error;
+    }
   }
 
   // 6. DELETE (Soft Delete Strategy)
@@ -44,6 +67,22 @@ class PolicyPackageService {
     // Save it back to the database
     await policy.save();
     return policy;
+  }
+
+  // Add this inside your PolicyPackageService class
+  async deletePolicyById(policyId) {
+    try {
+      // findByIdAndDelete physically removes the document from MongoDB
+      const deletedPolicy = await PolicyPackage.findByIdAndDelete(policyId);
+
+      if (!deletedPolicy) {
+        throw new Error("Policy package not found");
+      }
+
+      return deletedPolicy;
+    } catch (error) {
+      throw error;
+    }
   }
 }
 

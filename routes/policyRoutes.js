@@ -28,8 +28,14 @@ router.post(
   policyController.createPolicy,
 );
 
-// UPDATE a policy
-router.put(
+// // UPDATE a policy
+// router.put(
+//   "/:id",
+//   protect,
+//   authorizeRoles("admin", "superadmin"),
+//   policyController.updatePolicy,
+// );
+router.patch(
   "/:id",
   protect,
   authorizeRoles("admin", "superadmin"),
@@ -42,6 +48,14 @@ router.patch(
   protect,
   authorizeRoles("admin", "superadmin"),
   policyController.togglePolicyStatus,
+);
+
+// Make sure this exists in your router file!
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("admin", "superadmin"),
+  policyController.deletePolicy,
 );
 
 module.exports = router;

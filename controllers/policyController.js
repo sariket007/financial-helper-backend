@@ -1,5 +1,4 @@
 const PolicyPackageService = require("../services/PolicyPackageService");
-
 class PolicyController {
   // 1. CREATE (Admin Only)
   async createPolicy(req, res) {
@@ -52,23 +51,40 @@ class PolicyController {
     }
   }
 
-  // 5. UPDATE
-  async updatePolicy(req, res) {
+  // // 5. UPDATE
+  // async updatePolicy(req, res) {
+  //   try {
+  //     const updatedPolicy = await PolicyPackageService.updatePolicy(
+  //       req.params.id,
+  //       req.body,
+  //     );
+  //     if (!updatedPolicy) {
+  //       return res
+  //         .status(404)
+  //         .json({ success: false, error: "Policy not found" });
+  //     }
+  //     res.status(200).json({ success: true, data: updatedPolicy });
+  //   } catch (error) {
+  //     res.status(400).json({ success: false, error: error.message });
+  //   }
+  // }
+
+  // PATCH /api/policies/:id
+  updatePolicy = async (req, res) => {
     try {
-      const updatedPolicy = await PolicyPackageService.updatePolicy(
+      // The Controller just passes the ID and the Body to the Service
+      const policy = await PolicyPackageService.updatePolicyById(
         req.params.id,
         req.body,
       );
-      if (!updatedPolicy) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Policy not found" });
-      }
-      res.status(200).json({ success: true, data: updatedPolicy });
+
+      res.status(200).json({ success: true, data: policy });
     } catch (error) {
-      res.status(400).json({ success: false, error: error.message });
+      // The Controller catches the error the Service threw, and formats the HTTP response
+      const statusCode = error.message === "Policy not found" ? 404 : 400;
+      res.status(statusCode).json({ success: false, error: error.message });
     }
-  }
+  };
 
   // 6. TOGGLE STATUS (Soft Delete)
   async togglePolicyStatus(req, res) {
@@ -88,6 +104,21 @@ class PolicyController {
       res.status(500).json({ success: false, error: "Server Error" });
     }
   }
+
+  // Add this inside your PolicyController class
+  deletePolicy = async (req, res) => {
+    try {
+      // The Controller stays clean and just calls the Service
+      await PolicyPackageService.deletePolicyById(req.params.id);
+
+      // Standard REST practice is to return an empty object {} on a successful delete
+      res.status(200).json({ success: true, data: {} });
+    } catch (error) {
+      const statusCode =
+        error.message === "Policy package not found" ? 404 : 500;
+      res.status(statusCode).json({ success: false, error: error.message });
+    }
+  };
 }
 
 module.exports = new PolicyController();
