@@ -1,54 +1,52 @@
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 class AuthService {
-  // Helper method to generate the JWT pass
-  generateToken(id) {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-      expiresIn: "30d", // Token expires in 30 days
-    });
-  }
+  async registerUser(userData) {
+    const { name, email, password, role, financialProfile } = userData;
 
-  async registerUser(name, email, password, financialProfile) {
     // 1. Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       throw new Error("User already exists with this email.");
     }
 
-    // 2. Create the user (Mongoose will automatically hash the password here)
+    // 2. Create the user
     const user = await User.create({
       name,
       email,
       password,
+      role,
       financialProfile,
+      // Leaving your chat history array here in case you need it for your fintech app!
       chatHistory: [{ role: "system", message: "Account securely created." }],
     });
 
-    // 3. Return the user data and their new token
-    return {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      token: this.generateToken(user._id),
-    };
+    return user;
   }
 
   async loginUser(email, password) {
-    // 1. Find user. We MUST use .select('+password') because we hid it in the model!
-    const user = await User.findOne({ email }).select("+password");
-
-    // 2. Check if user exists AND password matches our hash
-    if (user && (await user.matchPassword(password))) {
-      return {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        token: this.generateToken(user._id),
-      };
-    } else {
-      throw new Error("Invalid email or password.");
+    // 1. Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new Error("Invalid credentials");
     }
+
+    // 2. Check if password matches using your Model's custom method
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      throw new Error("Invalid credentials");
+    }
+
+    return user;
+  }
+
+  async getUserById(userId) {
+    // We strip the password out here so it never accidentally leaks to the frontend
+    const user = await User.findById(userId).select("-password");
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
   }
 }
 

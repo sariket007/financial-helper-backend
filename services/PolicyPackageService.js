@@ -38,7 +38,11 @@ class PolicyPackageService {
       const updatedPolicy = await PolicyPackage.findByIdAndUpdate(
         policyId,
         updateData,
-        { new: true, runValidators: true },
+        {
+          // new: true,
+          returnDocument: "after", // <--- THE FIX IS HERE
+          runValidators: true,
+        },
       );
 
       if (!updatedPolicy) {

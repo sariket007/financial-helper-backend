@@ -1,7 +1,8 @@
-const User = require("../models/User");
+const AuthService = require("../services/AuthService");
 const jwt = require("jsonwebtoken");
 
 class AuthController {
+  // Helper method: This stays in the Controller because Cookies and HTTP Statuses are Controller jobs!
   sendTokenResponse = (user, statusCode, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -27,27 +28,21 @@ class AuthController {
           name: user.name,
           email: user.email,
           role: user.role,
-          financialProfile: user.financialProfile, // Send profile back to React
+          financialProfile: user.financialProfile,
         },
       });
   };
 
   register = async (req, res) => {
     try {
-      // Extract the new nested data exactly as React sends it
-      const { name, email, password, role, financialProfile } = req.body;
+      // Pass the pure data down to the Service
+      const user = await AuthService.registerUser(req.body);
 
-      const user = await User.create({
-        name,
-        email,
-        password,
-        role,
-        financialProfile,
-      });
-
+      // Handle the HTTP response
       this.sendTokenResponse(user, 201, res);
     } catch (error) {
-      res.status(400).json({ success: false, error: error.message });
+      const statusCode = error.message.includes("already exists") ? 400 : 500;
+      res.status(statusCode).json({ success: false, error: error.message });
     }
   };
 
@@ -61,21 +56,11 @@ class AuthController {
           .json({ success: false, error: "Please provide email and password" });
       }
 
-      const user = await User.findOne({ email });
-      if (!user)
-        return res
-          .status(401)
-          .json({ success: false, error: "Invalid credentials" });
-
-      const isMatch = await user.comparePassword(password);
-      if (!isMatch)
-        return res
-          .status(401)
-          .json({ success: false, error: "Invalid credentials" });
-
+      const user = await AuthService.loginUser(email, password);
       this.sendTokenResponse(user, 200, res);
     } catch (error) {
-      res.status(500).json({ success: false, error: error.message });
+      const statusCode = error.message === "Invalid credentials" ? 401 : 500;
+      res.status(statusCode).json({ success: false, error: error.message });
     }
   };
 
@@ -89,10 +74,11 @@ class AuthController {
 
   getMe = async (req, res) => {
     try {
-      const user = await User.findById(req.user.id).select("-password");
+      // req.user.id is securely provided by your protect middleware
+      const user = await AuthService.getUserById(req.user.id);
       res.status(200).json({ success: true, data: user });
     } catch (error) {
-      res.status(500).json({ success: false, error: "Server Error" });
+      res.status(404).json({ success: false, error: error.message });
     }
   };
 }
