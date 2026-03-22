@@ -6,6 +6,7 @@ class PolicyController {
       const newPolicy = await PolicyPackageService.createPolicy(req.body);
       res.status(201).json({ success: true, data: newPolicy });
     } catch (error) {
+      console.error("Error creating policy:", error);
       res.status(400).json({ success: false, error: error.message });
     }
   }
@@ -16,6 +17,7 @@ class PolicyController {
       const policies = await PolicyPackageService.getAllPolicies();
       res.status(200).json({ success: true, data: policies });
     } catch (error) {
+      console.error("Error fetching all policies:", error);
       res.status(500).json({ success: false, error: "Server Error" });
     }
   }
@@ -31,6 +33,7 @@ class PolicyController {
         data: publicPolicies,
       });
     } catch (error) {
+      console.error("Error fetching public policies:", error);
       res.status(500).json({ success: false, error: "Server Error" });
     }
   }
@@ -46,6 +49,7 @@ class PolicyController {
       }
       res.status(200).json({ success: true, data: policy });
     } catch (error) {
+      console.error("Error fetching policy by ID:", error);
       // If they pass an invalid MongoDB ID format, Mongoose throws a CastError
       res.status(400).json({ success: false, error: "Invalid ID format" });
     }
@@ -80,6 +84,7 @@ class PolicyController {
 
       res.status(200).json({ success: true, data: policy });
     } catch (error) {
+      console.error("Error updating policy:", error);
       // The Controller catches the error the Service threw, and formats the HTTP response
       const statusCode = error.message === "Policy not found" ? 404 : 400;
       res.status(statusCode).json({ success: false, error: error.message });
@@ -98,6 +103,7 @@ class PolicyController {
         data: toggledPolicy,
       });
     } catch (error) {
+      console.error("Error toggling policy status:", error);
       if (error.message === "Policy not found") {
         return res.status(404).json({ success: false, error: error.message });
       }
@@ -114,6 +120,7 @@ class PolicyController {
       // Standard REST practice is to return an empty object {} on a successful delete
       res.status(200).json({ success: true, data: {} });
     } catch (error) {
+      console.error("Error deleting policy:", error);
       const statusCode =
         error.message === "Policy package not found" ? 404 : 500;
       res.status(statusCode).json({ success: false, error: error.message });

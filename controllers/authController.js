@@ -41,6 +41,7 @@ class AuthController {
       // Handle the HTTP response
       this.sendTokenResponse(user, 201, res);
     } catch (error) {
+      console.error("Error in registration:", error);
       const statusCode = error.message.includes("already exists") ? 400 : 500;
       res.status(statusCode).json({ success: false, error: error.message });
     }
@@ -59,6 +60,7 @@ class AuthController {
       const user = await AuthService.loginUser(email, password);
       this.sendTokenResponse(user, 200, res);
     } catch (error) {
+      console.error("Error in login:", error);
       const statusCode = error.message === "Invalid credentials" ? 401 : 500;
       res.status(statusCode).json({ success: false, error: error.message });
     }
@@ -78,6 +80,7 @@ class AuthController {
       const user = await AuthService.getUserById(req.user.id);
       res.status(200).json({ success: true, data: user });
     } catch (error) {
+      console.error("Error fetching user profile:", error);
       res.status(404).json({ success: false, error: error.message });
     }
   };
