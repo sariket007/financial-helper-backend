@@ -51,9 +51,12 @@ class PolicyPackageService {
 
       return updatedPolicy;
     } catch (error) {
+      console.error("Error updating policy service:", error);
       // Handle MongoDB duplicate key error specifically
       if (error.code === 11000) {
-        throw new Error("A policy with this name already exists");
+        throw new Error("A policy with this name already exists", {
+          cause: error,
+        });
       }
       throw error;
     }
@@ -85,6 +88,7 @@ class PolicyPackageService {
 
       return deletedPolicy;
     } catch (error) {
+      console.error("Error deleting policy service:", error);
       throw error;
     }
   }
