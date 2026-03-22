@@ -2,10 +2,12 @@
   "name": "financial-helper-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "dev": "node --watch server.js",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
