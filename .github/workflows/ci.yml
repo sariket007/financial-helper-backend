@@ -1,0 +1,27 @@
+name: Backend CI Guardrail
+
+on:
+  pull_request:
+    branches: ["staging", "main"]
+
+jobs:
+  verify-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      # Strict install for CI environments
+      - name: Install Dependencies
+        run: npm ci
+
+      # Scan all backend files for syntax/unused variable errors
+      - name: Run Strict Linting
+        run: npm run lint
