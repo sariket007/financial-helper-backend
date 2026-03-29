@@ -15,7 +15,8 @@ class AuthController {
     const options = {
       expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production", // Must be true on Render
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // <-- THIS IS THE FIX
     };
 
     res
@@ -70,6 +71,8 @@ class AuthController {
     res.cookie("token", "none", {
       expires: new Date(Date.now() + 10 * 1000),
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
     res.status(200).json({ success: true, data: {} });
   };
