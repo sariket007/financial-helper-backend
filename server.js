@@ -18,7 +18,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://financial-helper-frontend.vercel.app",
 ];
-
+app.set("trust proxy", 1);
 app.use(
   cors({
     origin: function (origin, callback) {
